@@ -1,7 +1,7 @@
 #pragma once
 #ifndef _TOUCHPAD_H_
 #define _TOUCHPAD_H_
-
+#define numberOfFingerByteData 7
 #include "utils.h"
 #include <Windows.h>
 
@@ -16,16 +16,16 @@ enum TouchEventType {
 struct TouchData
 {
 	int touchID = -1;
-	int x = 0;
-	int y = 0;
+	long x = 0;
+	long y = 0;
 	bool onSurface = false;
 	TouchEventType eventType = RELEASED;
 };
 
 bool checkInput(UINT rawInputSize, PRAWINPUT rawInputData, hidDeviceInfo& deviceInfo);
 
-bool readInput(UINT rawInputSize, PRAWINPUT rawInputData, hidDeviceInfo& deviceInfo, TouchData& touchData, int& setRemaining);
+bool readInput(UINT rawInputSize, PRAWINPUT rawInputData, hidDeviceInfo& deviceInfo, std::vector<TouchData>& touchPoints);
 
-int saveTouchInput(std::vector<TouchData>& touchPoints, TouchData& newTouch);
+//int saveTouchInput(std::vector<TouchData>& touchPoints, TouchData& newTouch);
 
 #endif

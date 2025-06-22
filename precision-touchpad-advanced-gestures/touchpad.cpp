@@ -1,5 +1,5 @@
-#include "touchpad.h"
 #include "devices.h"
+#include "touchpad.h"
 
 #include <string>
 
@@ -48,7 +48,7 @@ bool checkInput(UINT rawInputSize, PRAWINPUT rawInputData, hidDeviceInfo& device
 	return false;
 }
 
-bool readInput(UINT rawInputSize, PRAWINPUT rawInputData, hidDeviceInfo& deviceInfo, TouchData& touchData, int& setRemaining) {
+bool readInput(UINT rawInputSize, PRAWINPUT rawInputData, hidDeviceInfo& deviceInfo, std::vector<TouchData>& touchPoints) {
 	NTSTATUS hidpReturnCode;
 	ULONG usageValue;
 	PHIDP_PREPARSED_DATA preparsedHIDData = deviceInfo.preparsedData;
@@ -72,121 +72,16 @@ bool readInput(UINT rawInputSize, PRAWINPUT rawInputData, hidDeviceInfo& deviceI
 		return false;
 	}
 
-	ULONG numContacts = usageValue;
-
-	if (numContacts > 0 || setRemaining == 0) {
-		setRemaining = numContacts - 1;
-		/*printf(FG_BRIGHT_BLUE);
-		printf("numContacts: %d\n", numContacts);
-		printf(RESET_COLOR);*/
-	}
-	else
-		setRemaining--;
-
 	hidTouchLinkCollectionInfo collectionInfo = deviceInfo.linkCollectionInfoList[0];
-
-	if (collectionInfo.hasX && collectionInfo.hasY && collectionInfo.hasContactID && collectionInfo.hasTipSwitch)
-	{
-		hidpReturnCode = HidP_GetUsageValue(HidP_Input, 0x01, collectionInfo.linkCollectionID, 0x30, &usageValue, preparsedHIDData, (PCHAR)rawInputData->data.hid.bRawData, rawInputData->data.hid.dwSizeHid);
-
-		if (hidpReturnCode != HIDP_STATUS_SUCCESS)
-		{
-			printf(FG_RED);
-			printf("Failed to read x position\n");
-			printf(RESET_COLOR);
-			printHidPErrors(hidpReturnCode);
-			return false;
-		}
-
-		ULONG xPos = usageValue;
-
-		hidpReturnCode = HidP_GetUsageValue(HidP_Input, 0x01, collectionInfo.linkCollectionID, 0x31, &usageValue, preparsedHIDData, (PCHAR)rawInputData->data.hid.bRawData, rawInputData->data.hid.dwSizeHid);
-		if (hidpReturnCode != HIDP_STATUS_SUCCESS)
-		{
-			printf(FG_RED);
-			printf("Failed to read y position\n");
-			printf(RESET_COLOR);
-			printHidPErrors(hidpReturnCode);
-			return false;
-		}
-
-		ULONG yPos = usageValue;
-
-		hidpReturnCode = HidP_GetUsageValue(HidP_Input, HID_USAGE_PAGE_DIGITIZER, collectionInfo.linkCollectionID, HID_USAGE_DIGITIZER_CONTACT_ID, &usageValue, preparsedHIDData, (PCHAR)rawInputData->data.hid.bRawData, rawInputData->data.hid.dwSizeHid);
-		if (hidpReturnCode != HIDP_STATUS_SUCCESS)
-		{
-			printf(FG_RED);
-			printf("Failed to read touch ID\n");
-			printf(RESET_COLOR);
-			printHidPErrors(hidpReturnCode);
-			return false;
-		}
-
-		ULONG touchId = usageValue;
-		const ULONG maxNumButtons = HidP_MaxUsageListLength(HidP_Input, HID_USAGE_PAGE_DIGITIZER, preparsedHIDData);
-		ULONG _maxNumButtons = maxNumButtons;
-		USAGE* buttonUsageArray = (USAGE*)malloc(sizeof(USAGE) * maxNumButtons);
-
-		hidpReturnCode = HidP_GetUsages(HidP_Input, HID_USAGE_PAGE_DIGITIZER, collectionInfo.linkCollectionID, buttonUsageArray, &_maxNumButtons, preparsedHIDData, (PCHAR)rawInputData->data.hid.bRawData, rawInputData->data.hid.dwSizeHid);
-
-		if (hidpReturnCode != HIDP_STATUS_SUCCESS)
-		{
-			printf(FG_RED);
-			printf("HidP_GetUsages failed!\n");
-			printf(RESET_COLOR);
-			printHidPErrors(hidpReturnCode);
-			return false;
-		}
-
-		int isContactOnSurface = 0;
-
-		for (ULONG usageIdx = 0; usageIdx < maxNumButtons; usageIdx++)
-		{
-			if (buttonUsageArray[usageIdx] == HID_USAGE_DIGITIZER_TIP_SWITCH)
-			{
-				isContactOnSurface = 1;
-				break;
-			}
-		}
-
-		free(buttonUsageArray);
-
-		touchData.touchID = touchId;
-		touchData.x = xPos;
-		touchData.y = yPos;
-		touchData.onSurface = isContactOnSurface;
+	BYTE *data = rawInputData->data.hid.bRawData; 
+	USHORT fingerAmount = data[1]/16;  //finger amount
+	USHORT OPCODE = data[0]; // opcode
+	USHORT Timestamp = data[3]; //just a recording of the time stamp
+	USHORT touchFlag = data[4]; // print 3 when touched and 1 when leaved
+	for (size_t i = 0; i < 5; i++){
+		touchPoints[i].x = data[5 + i * 5] | (data[6 + i * 5] << 8);
+		touchPoints[i].y = data[7 + i * 5] | (data[8 + i * 5] << 8);
+		touchPoints[i].onSurface = touchFlag == 3;
+	}
 		return true;
-	}
-	return false;
-}
-
-int saveTouchInput(std::vector<TouchData>& touchPoints, TouchData& newTouch)
-{
-	for (auto& prevTouch : touchPoints)
-	{
-		if (prevTouch.touchID == newTouch.touchID)
-		{
-			if (prevTouch.onSurface && newTouch.onSurface)
-			{
-				if ((prevTouch.x == newTouch.x) && (prevTouch.y == newTouch.y))
-					newTouch.eventType = TouchEventType::TOUCH_MOVE_UNCHANGED;
-				else
-					newTouch.eventType = TouchEventType::TOUCH_MOVE;
-			}
-			else if (prevTouch.onSurface && !newTouch.onSurface)
-				newTouch.eventType = TouchEventType::TOUCH_UP;
-			else if (!prevTouch.onSurface && newTouch.onSurface)
-				newTouch.eventType = TouchEventType::TOUCH_DOWN;
-			else
-				newTouch.eventType = TouchEventType::RELEASED; // this shouldn't be the correct way to do so
-
-			// update touch data
-			prevTouch = newTouch;
-
-			return 0;
-		}
-	}
-
-	touchPoints[newTouch.touchID] = newTouch;
-	return 0;
 }
