@@ -24,6 +24,7 @@
     <ProjectGuid>{76142b68-1192-4c43-8b19-8fc22e1ca966}</ProjectGuid>
     <RootNamespace>precisiontouchpadadvancedgestures</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>nervy-tracking</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
