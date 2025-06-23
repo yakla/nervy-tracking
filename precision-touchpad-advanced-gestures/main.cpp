@@ -16,7 +16,8 @@
 #include "config.h"
 
 std::vector<TouchData> touchPoints(config.maxTouchPoints);
-
+bool stop = false;
+long currentPointX = 0;
 LRESULT CALLBACK mBlockMouseInputHookProc(_In_ int nCode, _In_ WPARAM wParam, _In_ LPARAM lParam)
 {
 	// https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms644986(v=vs.85)
@@ -74,6 +75,7 @@ void handleInputMessage(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			printf("error");
 			exit(-1);
 		}
+		inputTouchPoints(touchPoints);
 	}
 	free(rawInputData);
 }
@@ -86,8 +88,8 @@ LRESULT CALLBACK WndProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In
 		registerRawInput(hwnd);
 		break;
 	case WM_INPUT:
+		currentPointX = touchPoints[0].x;
 		handleInputMessage(hwnd, uMsg, wParam, lParam);
-		printf("1:(%d,%d),2:(%d,%d) \n", touchPoints[0].x, touchPoints[0].y, touchPoints[1].x, touchPoints[1].y);
 		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
@@ -101,7 +103,7 @@ LRESULT CALLBACK WndProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In
 
 int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
-	parseInputDevices();
+	parseInputDevices(touchPoints);
 
 	WNDCLASSEX wcex;
 	wcex.cbSize = sizeof(WNDCLASSEX);

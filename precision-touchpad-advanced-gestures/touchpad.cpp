@@ -73,7 +73,8 @@ bool readInput(UINT rawInputSize, PRAWINPUT rawInputData, hidDeviceInfo& deviceI
 	}
 
 	hidTouchLinkCollectionInfo collectionInfo = deviceInfo.linkCollectionInfoList[0];
-	BYTE *data = rawInputData->data.hid.bRawData; 
+
+	BYTE *data = rawInputData->data.hid.bRawData;
 	USHORT fingerAmount = data[1]/16;  //finger amount
 	USHORT OPCODE = data[0]; // opcode
 	USHORT Timestamp = data[3]; //just a recording of the time stamp
@@ -81,7 +82,9 @@ bool readInput(UINT rawInputSize, PRAWINPUT rawInputData, hidDeviceInfo& deviceI
 	for (size_t i = 0; i < 5; i++){
 		touchPoints[i].x = data[5 + i * 5] | (data[6 + i * 5] << 8);
 		touchPoints[i].y = data[7 + i * 5] | (data[8 + i * 5] << 8);
-		touchPoints[i].onSurface = touchFlag == 3;
+		touchPoints[i].onSurface = (touchFlag == 3);
 	}
+	touchPoints[0].numberOfFingersOnTrackPad = data[1] / 16;
+	touchPoints[0].timestamp = data[3];
 		return true;
 }

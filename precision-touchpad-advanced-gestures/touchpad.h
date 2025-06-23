@@ -4,6 +4,7 @@
 #define numberOfFingerByteData 7
 #include "utils.h"
 #include <Windows.h>
+#define toLerance 10
 
 enum TouchEventType {
 	RELEASED,
@@ -15,10 +16,15 @@ enum TouchEventType {
 
 struct TouchData
 {
-	int touchID = -1;
+	long maxX = 0;
+	long maxY = 0;
+	short numberOfFingersOnTrackPad;
 	long x = 0;
 	long y = 0;
+	short angle = 0;
+	long distance = 0;
 	bool onSurface = false;
+	short timestamp = 0;
 	TouchEventType eventType = RELEASED;
 };
 

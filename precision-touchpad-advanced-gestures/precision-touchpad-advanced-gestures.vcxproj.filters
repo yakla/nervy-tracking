@@ -27,10 +27,10 @@
     <ClCompile Include="touchpad.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gesture.cpp">
+    <ClCompile Include="config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="config.cpp">
+    <ClCompile Include="gestureData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -48,6 +48,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gestureEngine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

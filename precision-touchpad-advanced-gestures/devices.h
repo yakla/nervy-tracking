@@ -11,6 +11,7 @@
 #pragma comment(lib, "hid.lib")
 
 #include "utils.h"
+#include "touchpad.h"
 
 // https://docs.microsoft.com/en-us/windows-hardware/design/component-guidelines/supporting-usages-in-multitouch-digitizer-drivers
 // Digitizer Page (0x0D)
@@ -29,7 +30,7 @@ int getRawInputData(HRAWINPUT hRawInput, PUINT pcbSize, LPVOID* pData);
 
 extern std::vector<hidDeviceInfo> deviceInfoList;
 
-void parseInputDevices();
+void parseInputDevices(std::vector<TouchData>& touchPoints);
 
 int findInputDeviceInList(std::vector<hidDeviceInfo>& hidInfoList, std::wstring& deviceName, PHIDP_PREPARSED_DATA preparsedData, const unsigned int preparsedDataSize, unsigned int& foundHidIndex);
 

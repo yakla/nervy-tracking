@@ -133,8 +133,60 @@ int getRawInputData(_In_ HRAWINPUT hRawInput, PUINT pcbSize, _Out_ LPVOID* pData
 	}
 	return ret;
 }
+void PrintTrackpadCapabilities(HANDLE hDevice, std::vector<TouchData>& touchPoints)
+{
+	// 1. קבל את גודל ה-Preparsed Data
+	UINT preparsedDataSize = 0;
+	if (GetRawInputDeviceInfo(hDevice, RIDI_PREPARSEDDATA, NULL, &preparsedDataSize) != 0) {
+		return; // שגיאה
+	}
 
-void parseInputDevices()
+	// 2. הקצה זיכרון וקבל את ה-Preparsed Data
+	std::vector<BYTE> preparsedData(preparsedDataSize);
+	if (GetRawInputDeviceInfo(hDevice, RIDI_PREPARSEDDATA, preparsedData.data(), &preparsedDataSize) == (UINT)-1) {
+		return; // שגיאה
+	}
+	PHIDP_PREPARSED_DATA pPreparsedData = (PHIDP_PREPARSED_DATA)preparsedData.data();
+
+	// 3. קבל את היכולות הכלליות של ההתקן
+	HIDP_CAPS caps;
+	if (HidP_GetCaps(pPreparsedData, &caps) != HIDP_STATUS_SUCCESS) {
+		return; // שגיאה
+	}
+
+	// 4. קבל את היכולות עבור כל "הערכים" (כמו X, Y, לחץ)
+	std::vector<HIDP_VALUE_CAPS> valueCaps(caps.NumberInputValueCaps);
+	if (HidP_GetValueCaps(HidP_Input, valueCaps.data(), &caps.NumberInputValueCaps, pPreparsedData) != HIDP_STATUS_SUCCESS) {
+		return; // שגיאה
+	}
+
+	// 5. עבור בלולאה על כל היכולות כדי למצוא את X ו-Y
+	for (int i = 0; i < caps.NumberInputValueCaps; ++i)
+	{
+		// בדוק אם זו היכולת של ציר X
+		if (valueCaps[i].UsagePage == HID_USAGE_PAGE_GENERIC && valueCaps[i].NotRange.Usage == HID_USAGE_GENERIC_X)
+		{
+			for (size_t j = 0; j < 5; j++)
+			{
+				touchPoints[j].maxX = valueCaps[i].LogicalMax;
+			}
+			printf("Found X-Axis! Logical Min: %d, Logical Max: %ld\n",
+				valueCaps[i].LogicalMin, valueCaps[i].LogicalMax);
+		}
+		// בדוק אם זו היכולת של ציר Y
+		else if (valueCaps[i].UsagePage == HID_USAGE_PAGE_GENERIC && valueCaps[i].NotRange.Usage == HID_USAGE_GENERIC_Y)
+		{
+			for (size_t j = 0; j < 5; j++)
+			{
+				touchPoints[j].maxY = valueCaps[i].LogicalMax;
+			}
+			printf("Found Y-Axis! Logical Min: %d, Logical Max: %ld\n",
+				valueCaps[i].LogicalMin, valueCaps[i].LogicalMax);
+		}
+	}
+}
+
+void parseInputDevices(std::vector<TouchData>& touchPoints)
 {
 	printf(FG_BLUE);
 	printf("Scanning HID devices...\n");
@@ -164,6 +216,8 @@ void parseInputDevices()
 		PHIDP_PREPARSED_DATA preparsedData = NULL;
 
 		getRawInputDevicePreparsedData(rawInputDevice.hDevice, &preparsedData, &cbDataSize);
+
+		PrintTrackpadCapabilities(rawInputDevice.hDevice,touchPoints);
 
 		NTSTATUS hidpReturnCode;
 
