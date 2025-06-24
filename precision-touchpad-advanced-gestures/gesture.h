@@ -9,9 +9,9 @@
 #include <deque>
 
 struct Stroke {
-	std::chrono::steady_clock::time_point beginTime = std::chrono::steady_clock::now();
-	std::chrono::steady_clock::time_point endTime = std::chrono::steady_clock::now();
 	std::chrono::steady_clock::time_point previousReleaseTime = std::chrono::steady_clock::now(); // for debouncing because touchpads and fingers aren't perfect
+	std::chrono::steady_clock::time_point gestureCurrentTime;
+	std::chrono::steady_clock::time_point gestureBeginingTime;
 	std::vector<TouchData> touchData;
 };
 

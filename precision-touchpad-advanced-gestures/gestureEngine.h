@@ -38,6 +38,30 @@ public:
 		}
 	}
 	void twoFingersHoldGesture(std::deque<Stroke> activeStroke) {
+		auto pressDuration = std::chrono::duration_cast<std::chrono::milliseconds>(activeStroke[0].gestureCurrentTime - activeStroke[0].gestureBeginingTime);
+		if (pressDuration.count() > 3000 && activeStroke[0].touchData[0].numberOfFingersOnTrackPad == 2)
+		{
+		INPUT ip[4] = {};
+
+		ip[0].type = INPUT_KEYBOARD;
+		ip[1].type = INPUT_KEYBOARD;
+		ip[2].type = INPUT_KEYBOARD;
+		ip[3].type = INPUT_KEYBOARD;
+
+		ip[0].ki.wVk = VK_LWIN; 
+		ip[0].ki.dwFlags = 0; 
+
+		ip[1].ki.wVk = VK_DOWN;
+		ip[1].ki.dwFlags = 0;
+
+		ip[2].ki.wVk = VK_DOWN;
+		ip[2].ki.dwFlags = KEYEVENTF_KEYUP;
+
+		ip[3].ki.wVk = VK_LWIN;
+		ip[3].ki.dwFlags = KEYEVENTF_KEYUP;
+
+		SendInput(4, ip, sizeof(INPUT));
+		}
 	}
 };
 
