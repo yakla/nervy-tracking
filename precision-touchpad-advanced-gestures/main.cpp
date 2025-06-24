@@ -17,7 +17,6 @@
 
 std::vector<TouchData> touchPoints(config.maxTouchPoints);
 bool stop = false;
-long currentPointX = 0;
 LRESULT CALLBACK mBlockMouseInputHookProc(_In_ int nCode, _In_ WPARAM wParam, _In_ LPARAM lParam)
 {
 	// https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms644986(v=vs.85)
@@ -88,7 +87,6 @@ LRESULT CALLBACK WndProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In
 		registerRawInput(hwnd);
 		break;
 	case WM_INPUT:
-		currentPointX = touchPoints[0].x;
 		handleInputMessage(hwnd, uMsg, wParam, lParam);
 		break;
 	case WM_DESTROY:

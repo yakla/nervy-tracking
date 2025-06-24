@@ -10,6 +10,7 @@ std::deque<Stroke> activeStroke = {};
 short index = 0;
 std::chrono::steady_clock::time_point gestureBeginTime;
 bool repeat = false;
+bool ForceRecordData = false;
 GestureEngine engine;
 
 void inputTouchPoints(std::vector<TouchData> touchData)
@@ -24,6 +25,7 @@ void inputTouchPoints(std::vector<TouchData> touchData)
 		}
 	}
 	else {
+		ForceRecordData = true;
 		gestureBeginTime = std::chrono::steady_clock::now();
 		repeat = false;
 	}
@@ -35,9 +37,9 @@ void inputTouchPoints(std::vector<TouchData> touchData)
 	if (!activeStroke.empty()) {
 		lastTimeStamp = activeStroke[0].touchData[0].timestamp;
 	}
-	if (touchData[0].timestamp != lastTimeStamp)
+	if (touchData[0].timestamp != lastTimeStamp || ForceRecordData)
 	{
-
+		ForceRecordData = false;
 		for (int touchId = 0; touchId < config.maxTouchPoints; touchId++) {
 
 			TouchData& singleTouchData = touchData[touchId];
