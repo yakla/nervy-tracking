@@ -22,6 +22,7 @@ struct TouchData
 	short numberOfFingersOnTrackPad;
 	long x = 0;
 	long y = 0;
+	int velocity = 0;
 	short angle = 0;
 	long distance = 0;
 	bool onSurface = false;

@@ -57,7 +57,12 @@ void inputTouchPoints(std::vector<TouchData> touchData)
 					// distance and angle
 					double deltaX = currentTouch.x - previousTouch.x;
 					double deltaY = currentTouch.y - previousTouch.y;
-					currentTouch.distance = sqrt(deltaX * deltaX + deltaY * deltaY);
+					if (previousTouch.onSurface) {
+						currentTouch.distance = sqrt(deltaX * deltaX + deltaY * deltaY);
+					}
+					else {
+						currentTouch.distance = 0;
+					}
 					if (currentTouch.distance > 0.001) {
 						currentTouch.angle = atan2(deltaY, deltaX);
 					}
@@ -73,8 +78,8 @@ void inputTouchPoints(std::vector<TouchData> touchData)
 		}
 
 		if (activeStroke.size()>1) {
-			engine.downSwipeGesture(activeStroke);
-			engine.twoFingersHoldGesture(activeStroke);
+		  engine.downSwipeGesture(activeStroke);
+		  engine.twoFingersHoldGesture(activeStroke);
 		}
 
 	}

@@ -3,12 +3,37 @@
 #include "touchpad.h"
 #include "config.h"
 #include "winuser.h"
+#include <algorithm>
+#include <windows.h>
+#include <string>
+#include <psapi.h>
+#include <ShellScalingApi.h>
+#include <iostream>
+#pragma comment(lib, "Psapi.lib")
+#pragma comment(lib, "Shcore.lib")
+
+
 enum touchGestures {
 	sideSwipe,
 	twoFingersHold,
 	downSwipe
 };
-bool doOnce = false;
+
+enum class DragState {
+	Idle,      
+	Ready,     
+	Dragging  
+};
+HWND activeHWND;
+int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+bool toMaximize = true;
+bool HoldOnce = false;
+bool moved = false;
+double windowsScalling;
+POINT cursorPos;
+RECT windowRect;
+HRESULT hr;
 class GestureEngine
 {
 public:
@@ -53,10 +78,65 @@ public:
 		}
 	}
 	void twoFingersHoldGesture(std::deque<Stroke> activeStroke) {
-		//auto pressDuration = std::chrono::duration_cast<std::chrono::milliseconds>(activeStroke[0].gestureCurrentTime - activeStroke[0].gestureBeginingTime);
-		//if (pressDuration.count() > 3000 && activeStroke[0].touchData[0].numberOfFingersOnTrackPad == 2){
+		auto pressDuration = std::chrono::duration_cast<std::chrono::milliseconds>(activeStroke[0].gestureCurrentTime - activeStroke[0].gestureBeginingTime);
+		INPUT ip[1] = {};
+		ip[0].type = INPUT_MOUSE;
+		if (!activeStroke[0].touchData[0].onSurface)
+		{
+			moved = false;
+		}
+		if (pressDuration.count() > 1000 && activeStroke[0].touchData[0].numberOfFingersOnTrackPad == 2 && !moved) {
+			GetCursorPos(&cursorPos);
+			if (activeHWND == NULL)
+			{
+				activeHWND = WindowFromPoint(cursorPos);
+			}
+			if (toMaximize) {
+				ShowWindow(activeHWND, SW_MAXIMIZE);
+				toMaximize = false;
+			}
+			windowsScalling = getWindowScalling();
+			//std::cout << windowsScalling;
+			
+			if (HoldOnce) {
+				SetCursorPos(static_cast<int>(windowsScalling * static_cast<double>(activeStroke[0].touchData[0].x * screenWidth / activeStroke[0].touchData[0].maxX)), static_cast<int>(windowsScalling * static_cast<double>(activeStroke[0].touchData[0].y * screenHeight / activeStroke[0].touchData[0].maxY))-60);
+			}
+			if (!HoldOnce)
+			{
+				ip[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+				SetCursorPos(windowsScalling * screenWidth / 2, 0);
+				SendInput(ARRAYSIZE(ip), ip, sizeof(INPUT));
+				HoldOnce = true;
+			}
+		}
+		else
+		{
+			if (HoldOnce) {
+				ip[0].mi.dwFlags = MOUSEEVENTF_LEFTUP;
+				SendInput(ARRAYSIZE(ip), ip, sizeof(INPUT));
+			}
+			if (activeStroke[0].touchData[0].distance > toLerance) {
+				moved = true;
+			}
+			toMaximize = true;
+			HoldOnce = false;
+			activeHWND = NULL;
+		}
+		
+	}
+	double getWindowScalling() {
+		GetCursorPos(&cursorPos);
 
-		//}
+		HMONITOR hMonitor = MonitorFromPoint(cursorPos, MONITOR_DEFAULTTONEAREST);
+
+		UINT dpiX, dpiY;
+		hr = GetDpiForMonitor(
+			hMonitor,                  
+			MDT_EFFECTIVE_DPI,         
+			&dpiX,                     
+			&dpiY                      
+		);
+		return static_cast<double>(dpiX) / 96.0;
 	}
 };
 
