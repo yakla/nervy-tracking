@@ -40,7 +40,7 @@ void inputTouchPoints(std::vector<TouchData> touchData)
 	if (touchData[0].timestamp != lastTimeStamp || ForceRecordData)
 	{
 		ForceRecordData = false;
-		for (int touchId = 0; touchId < config.maxTouchPoints; touchId++) {
+		for (int touchId = 0; touchId < maxTouchPoints; touchId++) {
 
 			TouchData& singleTouchData = touchData[touchId];
 		

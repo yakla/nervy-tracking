@@ -3,5 +3,4 @@
 #include <fstream>
 #include <map>
 
-Config config;
 

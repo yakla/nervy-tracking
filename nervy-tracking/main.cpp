@@ -15,7 +15,7 @@
 #include "gesture.h"
 #include "config.h"
 
-std::vector<TouchData> touchPoints(config.maxTouchPoints);
+std::vector<TouchData> touchPoints(maxTouchPoints);
 bool stop = false;
 LRESULT CALLBACK mBlockMouseInputHookProc(_In_ int nCode, _In_ WPARAM wParam, _In_ LPARAM lParam)
 {

@@ -27,9 +27,6 @@
     <ClCompile Include="touchpad.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="config.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="gestureData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
