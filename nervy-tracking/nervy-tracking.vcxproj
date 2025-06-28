@@ -129,7 +129,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="devices.cpp" />
-    <ClCompile Include="gestureData.cpp" />
+    <ClCompile Include="gestureCall.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="touchpad.cpp" />
     <ClCompile Include="utils.cpp" />

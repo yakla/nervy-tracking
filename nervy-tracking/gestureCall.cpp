@@ -6,13 +6,13 @@
 # define M_PI 3.14159265358979323846
 #define MAX_HISTORY_SIZE 10
 
-std::deque<Stroke> activeStroke = {};
+std::deque<Stroke> activeStrokes = {};
+
 short index = 0;
 std::chrono::steady_clock::time_point gestureBeginTime;
 bool repeat = false;
 bool ForceRecordData = false;
-GestureEngine engine;
-
+gestureEngine engine(activeStrokes);
 void inputTouchPoints(std::vector<TouchData> touchData)
 {
 	Stroke currentStroke;
@@ -34,8 +34,8 @@ void inputTouchPoints(std::vector<TouchData> touchData)
 	currentStroke.gestureBeginingTime = gestureBeginTime;
 
 	int lastTimeStamp = -1;
-	if (!activeStroke.empty()) {
-		lastTimeStamp = activeStroke[0].touchData[0].timestamp;
+	if (!activeStrokes.empty()) {
+		lastTimeStamp = activeStrokes[0].touchData[0].timestamp;
 	}
 	if (touchData[0].timestamp != lastTimeStamp || ForceRecordData)
 	{
@@ -49,10 +49,10 @@ void inputTouchPoints(std::vector<TouchData> touchData)
 
 
 		
-			if (activeStroke.size()>0)
+			if (activeStrokes.size()>0)
 			{
 					TouchData& currentTouch = currentStroke.touchData[touchId];
-					TouchData& previousTouch = activeStroke.front().touchData[touchId];
+					TouchData& previousTouch = activeStrokes.front().touchData[touchId];
 
 					// distance and angle
 					double deltaX = currentTouch.x - previousTouch.x;
@@ -71,16 +71,19 @@ void inputTouchPoints(std::vector<TouchData> touchData)
 					}
 			}
 		}
-			activeStroke.push_front(currentStroke);
+			activeStrokes.push_front(currentStroke);
 
-		if (activeStroke.size() >= MAX_HISTORY_SIZE) {
-			activeStroke.pop_back();
+		if (activeStrokes.size() >= MAX_HISTORY_SIZE) {
+			activeStrokes.pop_back();
 		}
 
-		if (activeStroke.size()>1) {
-		  engine.downSwipeGesture(activeStroke);
-		  engine.twoFingersHoldGesture(activeStroke);
+		auto action = [](std::deque<Stroke> activeStrokes) {
+			printf("LSSG \n");
+		};
+
+		if (activeStrokes.size()>1) {
+			engine.ActivateGesture(leftSideSwipeGesture, action);
 		}
 
 	}
-}
+} 
