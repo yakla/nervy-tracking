@@ -2,7 +2,8 @@
 #ifndef _TOUCHPAD_H_
 #define _TOUCHPAD_H_
 #define numberOfFingerByteData 7
-#define toLerance 50
+#define gesturePlacementToLerance 140
+#define fingerPlacementToLerance 4
 #include "utils.h"
 #include <Windows.h>
 
@@ -17,11 +18,13 @@ enum TouchEventType {
 struct TouchData
 {
 	short touchID = -1;
-	long maxX = 0;
-	long maxY = 0;
+	int maxX = 0;
+	int maxY = 0;
 	short numberOfFingersOnTrackPad;
-	long x = 0;
-	long y = 0;
+	int x = 0;
+	int y = 0;
+	int deltaX = 0;
+	int deltaY = 0;
 	int velocity = 0;
 	double angle = 0;
 	double distance = 0;

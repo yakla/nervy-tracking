@@ -13,7 +13,7 @@ std::chrono::steady_clock::time_point gestureBeginTime;
 bool repeat = false;
 bool ForceRecordData = false;
 gestureEngine engine(activeStrokes);
-void inputTouchPoints(std::vector<TouchData> touchData)
+void callStrokeGestures(std::vector<TouchData> touchData)
 {
 	Stroke currentStroke;
 	if (touchData[0].onSurface) {
@@ -55,19 +55,19 @@ void inputTouchPoints(std::vector<TouchData> touchData)
 					TouchData& previousTouch = activeStrokes.front().touchData[touchId];
 
 					// distance and angle
-					double deltaX = currentTouch.x - previousTouch.x;
-					double deltaY = currentTouch.y - previousTouch.y;
+					currentTouch.deltaX = currentTouch.x - previousTouch.x;
+					currentTouch.deltaY = currentTouch.y - previousTouch.y;
 					if (previousTouch.onSurface) {
-						currentTouch.distance = sqrt(deltaX * deltaX + deltaY * deltaY);
+						currentTouch.distance = sqrt(currentTouch.deltaX * currentTouch.deltaX + currentTouch.deltaY * currentTouch.deltaY);
 					}
 					else {
 						currentTouch.distance = 0;
 					}
 					if (currentTouch.distance > 0.001) {
-						currentTouch.angle = atan2(deltaY, deltaX);
+						currentTouch.angle = atan2(currentTouch.deltaY, currentTouch.deltaX);
 					}
 					else {
-						currentTouch.angle = 0.0;
+						currentTouch.angle = previousTouch.angle;
 					}
 			}
 		}
@@ -78,11 +78,24 @@ void inputTouchPoints(std::vector<TouchData> touchData)
 		}
 
 		auto action = [](std::deque<Stroke> activeStrokes) {
-			printf("LSSG \n");
-		};
+				auto Xdistance = activeStrokes[1].touchData[0].x - activeStrokes[0].touchData[0].x;
+				INPUT ip[2] = {};
+				if (Xdistance > 0) {
+					ip->ki.wVk = VK_LEFT;
+				}
+				else if (Xdistance < 0)
+				{
+					ip->ki.wVk = VK_RIGHT;
 
+				}
+				ip->type = INPUT_KEYBOARD;
+
+				ip[1].ki.dwFlags = KEYEVENTF_KEYUP;
+
+				SendInput(ARRAYSIZE(ip), ip, sizeof(INPUT));
+		};
 		if (activeStrokes.size()>1) {
-			engine.ActivateGesture(leftSideSwipeGesture, action);
+			engine.ActivateGesture(bottomSwipeGesture, action);
 		}
 
 	}

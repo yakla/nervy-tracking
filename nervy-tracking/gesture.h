@@ -17,6 +17,6 @@ struct Stroke {
 
 extern std::deque<Stroke> activeStrokes;
 
-void inputTouchPoints(std::vector<TouchData> touchPoints);
+void callStrokeGestures(std::vector<TouchData> touchPoints);
 
 #endif

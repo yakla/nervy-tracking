@@ -16,6 +16,7 @@ enum TouchGestures {
 	rightSideSwipeGesture,
 	bottomSwipeGesture,
 	topSwipeGesture,
+	cornerSwipeGesture,
 	twoFingersHoldGesture,
 	twofingerHoldSideSwipeGesture,
 	threeFingerHoldGesture,
@@ -23,15 +24,20 @@ enum TouchGestures {
 };
 
 HWND activeHWND;
+
 int screenWidth = GetSystemMetrics(SM_CXSCREEN);
 int screenHeight = GetSystemMetrics(SM_CYSCREEN);
 double windowsScalling;
 POINT cursorPos;
-RECT windowRect;
+RECT CursorClipRect ;
 HRESULT hr;
-
-bool isNear(double num1, double num2) {
-	return abs(num1 - num2) < toLerance;
+auto clipCursor = []() {
+	GetCursorPos(&cursorPos);
+	CursorClipRect = { cursorPos.x, cursorPos.y, cursorPos.x, cursorPos.y };
+	ClipCursor(&CursorClipRect);
+	};
+bool isNear(double num1, double num2 , double ToLerance) {
+	return abs(num1 - num2) < ToLerance;
 }
 
 class gestureEngine
@@ -41,23 +47,41 @@ private:
 
 	void LeftSideSwipeGesture(std::function<void(std::deque<Stroke>)> action) {
 		auto touchData = recentStrokes[0].touchData;
-		if (touchData[0].numberOfFingersOnTrackPad == 1 && isNear(touchData[0].x, touchData[0].maxX))
+		if (touchData[0].numberOfFingersOnTrackPad == 1 
+			&& isNear(touchData[0].x, touchData[0].maxX,gesturePlacementToLerance))
 		{
 			action(recentStrokes);
+			clipCursor();
+		}
+		else
+		{
+			ClipCursor(NULL);
 		}
 	}
 	void RightSideSwipeGesture(std::function<void(std::deque<Stroke>)> action) {
 		auto touchData = recentStrokes[0].touchData;
-		if (touchData[0].numberOfFingersOnTrackPad == 1)
+		if (touchData[0].numberOfFingersOnTrackPad == 1 
+			&& isNear(touchData[0].x, 0, gesturePlacementToLerance))
 		{
 			action(recentStrokes);
+			clipCursor();
+		}
+		else
+		{
+			ClipCursor(NULL);
 		}
 	}
 	void BottomSwipeGesture(std::function<void(std::deque<Stroke>)> action) {
 		auto touchData = recentStrokes[0].touchData;
-		if (touchData[0].numberOfFingersOnTrackPad == 1)
+		if (touchData[0].numberOfFingersOnTrackPad == 1 
+			&& isNear(touchData[0].y, touchData[0].maxY, gesturePlacementToLerance))
 		{
 			action(recentStrokes);
+			clipCursor();
+		}
+		else
+		{
+			ClipCursor(NULL);
 		}
 	}
 	void TopSwipeGesture(std::function<void(std::deque<Stroke>)>action) {
@@ -65,6 +89,23 @@ private:
 		if (touchData[0].numberOfFingersOnTrackPad == 1)
 		{
 			action(recentStrokes);
+			clipCursor();
+		}
+		else
+		{
+			ClipCursor(NULL);
+		}
+	}
+	void CornerSwipeGesture(std::function<void(std::deque<Stroke>)>action) {
+		auto touchData = recentStrokes[0].touchData;
+		if (touchData[0].numberOfFingersOnTrackPad == 1 )
+		{
+			action(recentStrokes);
+			clipCursor();
+		}
+		else
+		{
+			ClipCursor(NULL);
 		}
 	}
 	void TwoFingersHoldGesture(std::function<void(std::deque<Stroke>)> action) {
@@ -72,6 +113,11 @@ private:
 		if (touchData[0].numberOfFingersOnTrackPad == 2)
 		{
 			action(recentStrokes);
+			clipCursor();
+		}
+		else
+		{
+			ClipCursor(NULL);
 		}
 	}
 	void TwofingerHoldSideSwipeGesture(std::function<void(std::deque<Stroke>)> action) {
@@ -79,6 +125,11 @@ private:
 		if (touchData[0].numberOfFingersOnTrackPad == 2)
 		{
 			action(recentStrokes);
+			clipCursor();
+		}
+		else
+		{
+			ClipCursor(NULL);
 		}
 	}
 	void ThreeFingerHoldGesture(std::function<void(std::deque<Stroke>)> action) {
@@ -86,14 +137,23 @@ private:
 		if (touchData[0].numberOfFingersOnTrackPad == 3)
 		{
 		action(recentStrokes);
+		clipCursor();
 		}
-		
+		else
+		{
+			ClipCursor(NULL);
+		}
 	}
 	void FiveFingerHoldGesture(std::function<void(std::deque<Stroke>)> action) {
 		auto touchData = recentStrokes[0].touchData;
 		if (touchData[0].numberOfFingersOnTrackPad == 5)
 		{
 			action(recentStrokes);
+			clipCursor();
+		}
+		else
+		{
+			ClipCursor(NULL);
 		}
 	}
 public:
@@ -103,31 +163,41 @@ public:
 	}
 	
 	void ActivateGesture(TouchGestures gesture , std::function<void(std::deque<Stroke>)>action) {
+		if(recentStrokes[0].touchData[0].onSurface 
+			&& activeStrokes[0].touchData[0].distance > fingerPlacementToLerance){
 		switch (gesture) {
-		case leftSideSwipeGesture:
-			LeftSideSwipeGesture(action);
-			break;
-		case rightSideSwipeGesture:
-			RightSideSwipeGesture(action);
-			break;
-		case bottomSwipeGesture:
-			BottomSwipeGesture(action);
-			break;
-		case topSwipeGesture:
-			TopSwipeGesture(action);
-			break;
-		case twoFingersHoldGesture:
-			TwoFingersHoldGesture(action);
-			break;
-		case twofingerHoldSideSwipeGesture:
-			TwofingerHoldSideSwipeGesture(action);
-			break;
-		case threeFingerHoldGesture:
-			ThreeFingerHoldGesture(action);
-			break;
-		case fiveFingerHoldGesture:
-			FiveFingerHoldGesture(action);
-			break;
+			case leftSideSwipeGesture:
+				LeftSideSwipeGesture(action);
+				break;
+			case rightSideSwipeGesture:
+				RightSideSwipeGesture(action);
+				break;
+			case bottomSwipeGesture:
+				BottomSwipeGesture(action);
+				break;
+			case topSwipeGesture:
+				TopSwipeGesture(action);
+				break;
+			case cornerSwipeGesture:
+				CornerSwipeGesture(action);
+				break;
+			case twoFingersHoldGesture:
+				TwoFingersHoldGesture(action);
+				break;
+			case twofingerHoldSideSwipeGesture:
+				TwofingerHoldSideSwipeGesture(action);
+				break;
+			case threeFingerHoldGesture:
+				ThreeFingerHoldGesture(action);
+				break;
+			case fiveFingerHoldGesture:
+				FiveFingerHoldGesture(action);
+				break;
+			}
+		}
+		else
+		{
+			ClipCursor(NULL);
 		}
 	}
 };

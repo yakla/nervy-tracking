@@ -74,7 +74,7 @@ void handleInputMessage(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			printf("error");
 			exit(-1);
 		}
-		inputTouchPoints(touchPoints);
+		callStrokeGestures(touchPoints);
 	}
 	free(rawInputData);
 }
